@@ -1,6 +1,18 @@
 cmake_minimum_required(VERSION 3.16)
 project(pick_ik)
 
+Include(FetchContent)
+
+set(FETCHCONTENT_QUIET FALSE)
+
+FetchContent_Declare(
+  expected
+  GIT_REPOSITORY https://github.com/TartanLlama/expected.git
+  GIT_TAG        v1.0.0
+)
+
+FetchContent_MakeAvailable(expected)
+
 if(CMAKE_CXX_COMPILER_ID MATCHES "(GNU|Clang)")
     add_compile_options(-Werror -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wsign-conversion -Wold-style-cast)
 endif()
@@ -16,7 +28,6 @@ COMPONENTS
   tf2_eigen
   tf2_geometry_msgs
   tf2_kdl
-  tl_expected
 )
 find_package(Eigen3 REQUIRED)
 
@@ -33,11 +44,10 @@ catkin_package(
     tf2_eigen
     tf2_geometry_msgs
     tf2_kdl
-    tl_expected
   )
 
 include_directories(SYSTEM include
-  ${catkin_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIRS}
+  ${catkin_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIRS} ${tl_expected_SOURCE_DIR}/include/tl
 )
 
 add_library(pick_ik_plugin SHARED
@@ -52,8 +62,9 @@ add_library(pick_ik_plugin SHARED
 target_compile_features(pick_ik_plugin PUBLIC c_std_99 cxx_std_17)
 target_include_directories(pick_ik_plugin PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>)
-target_link_libraries(pick_ik_plugin ${catkin_LIBRARIES})
+  $<INSTALL_INTERFACE:include>
+  )
+target_link_libraries(pick_ik_plugin ${catkin_LIBRARIES} expected)
 
 # pluginlib_export_plugin_description_file(
 #   moveit_core
