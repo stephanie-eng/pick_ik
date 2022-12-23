@@ -6,21 +6,21 @@
 
 #include <pick_ik_parameters.hpp>
 #include <pluginlib/class_list_macros.hpp>
-#include <rclcpp/rclcpp.hpp>
 
 #include <moveit/kinematics_base/kinematics_base.h>
 #include <moveit/robot_model/joint_model_group.h>
 #include <moveit/robot_state/robot_state.h>
+#include <ros/ros.h>
 #include <string>
 #include <vector>
 
 namespace pick_ik {
 namespace {
-auto const LOGGER = rclcpp::get_logger("pick_ik");
+auto const LOGNAME = "pick_ik";
 }
 
 class PickIKPlugin : public kinematics::KinematicsBase {
-    rclcpp::Node::SharedPtr node_;
+    ros::NodeHandle& node_;
     std::shared_ptr<ParamListener> parameter_listener_;
     moveit::core::JointModelGroup const* jmg_;
 
@@ -30,7 +30,7 @@ class PickIKPlugin : public kinematics::KinematicsBase {
     Robot robot_;
 
    public:
-    virtual bool initialize(rclcpp::Node::SharedPtr const& node,
+    virtual bool initialize(ros::NodeHandle const& node,
                             moveit::core::RobotModel const& robot_model,
                             std::string const& group_name,
                             std::string const& base_frame,
@@ -55,7 +55,7 @@ class PickIKPlugin : public kinematics::KinematicsBase {
         // Initialize internal state
         jmg_ = robot_model_->getJointModelGroup(group_name);
         if (!jmg_) {
-            RCLCPP_ERROR(LOGGER, "failed to get joint model group %s", group_name.c_str());
+            ROS_ERROR(LOGNAME, "failed to get joint model group %s", group_name.c_str());
             return false;
         }
 
@@ -90,14 +90,14 @@ class PickIKPlugin : public kinematics::KinematicsBase {
     }
 
     virtual bool searchPositionIK(
-        std::vector<geometry_msgs::msg::Pose> const& ik_poses,
+        std::vector<geometry_msgs::Pose> const& ik_poses,
         std::vector<double> const& ik_seed_state,
         double timeout,
         std::vector<double> const&,
         std::vector<double>& solution,
         IKCallbackFn const& solution_callback,
         IKCostFn cost_function,
-        moveit_msgs::msg::MoveItErrorCodes& error_code,
+        moveit_msgs::MoveItErrorCodes& error_code,
         kinematics::KinematicsQueryOptions const& options = kinematics::KinematicsQueryOptions(),
         moveit::core::RobotState const* context_state = nullptr) const {
         (void)context_state;  // not used
@@ -195,7 +195,7 @@ class PickIKPlugin : public kinematics::KinematicsBase {
                                          gd_params,
                                          options.return_approximate_solution);
         } else {
-            RCLCPP_ERROR(LOGGER, "Invalid solver mode: %s", params.mode.c_str());
+            ROS_ERROR(LOGNAME, "Invalid solver mode: %s", params.mode.c_str());
             return false;
         }
 
@@ -255,26 +255,26 @@ class PickIKPlugin : public kinematics::KinematicsBase {
 
     virtual bool getPositionFK(std::vector<std::string> const&,
                                std::vector<double> const&,
-                               std::vector<geometry_msgs::msg::Pose>&) const {
+                               std::vector<geometry_msgs::Pose>&) const {
         return false;
     }
 
-    virtual bool getPositionIK(geometry_msgs::msg::Pose const&,
+    virtual bool getPositionIK(geometry_msgs::Pose const&,
                                std::vector<double> const&,
                                std::vector<double>&,
-                               moveit_msgs::msg::MoveItErrorCodes&,
+                               moveit_msgs::MoveItErrorCodes&,
                                kinematics::KinematicsQueryOptions const&) const {
         return false;
     }
 
-    virtual bool searchPositionIK(geometry_msgs::msg::Pose const& ik_pose,
+    virtual bool searchPositionIK(geometry_msgs::Pose const& ik_pose,
                                   std::vector<double> const& ik_seed_state,
                                   double timeout,
                                   std::vector<double>& solution,
-                                  moveit_msgs::msg::MoveItErrorCodes& error_code,
+                                  moveit_msgs::MoveItErrorCodes& error_code,
                                   kinematics::KinematicsQueryOptions const& options =
                                       kinematics::KinematicsQueryOptions()) const {
-        return searchPositionIK(std::vector<geometry_msgs::msg::Pose>{ik_pose},
+        return searchPositionIK(std::vector<geometry_msgs::Pose>{ik_pose},
                                 ik_seed_state,
                                 timeout,
                                 std::vector<double>(),
@@ -284,15 +284,15 @@ class PickIKPlugin : public kinematics::KinematicsBase {
                                 options);
     }
 
-    virtual bool searchPositionIK(geometry_msgs::msg::Pose const& ik_pose,
+    virtual bool searchPositionIK(geometry_msgs::Pose const& ik_pose,
                                   std::vector<double> const& ik_seed_state,
                                   double timeout,
                                   std::vector<double> const& consistency_limits,
                                   std::vector<double>& solution,
-                                  moveit_msgs::msg::MoveItErrorCodes& error_code,
+                                  moveit_msgs::MoveItErrorCodes& error_code,
                                   kinematics::KinematicsQueryOptions const& options =
                                       kinematics::KinematicsQueryOptions()) const {
-        return searchPositionIK(std::vector<geometry_msgs::msg::Pose>{ik_pose},
+        return searchPositionIK(std::vector<geometry_msgs::Pose>{ik_pose},
                                 ik_seed_state,
                                 timeout,
                                 consistency_limits,
@@ -302,15 +302,15 @@ class PickIKPlugin : public kinematics::KinematicsBase {
                                 options);
     }
 
-    virtual bool searchPositionIK(geometry_msgs::msg::Pose const& ik_pose,
+    virtual bool searchPositionIK(geometry_msgs::Pose const& ik_pose,
                                   std::vector<double> const& ik_seed_state,
                                   double timeout,
                                   std::vector<double>& solution,
                                   IKCallbackFn const& solution_callback,
-                                  moveit_msgs::msg::MoveItErrorCodes& error_code,
+                                  moveit_msgs::MoveItErrorCodes& error_code,
                                   kinematics::KinematicsQueryOptions const& options =
                                       kinematics::KinematicsQueryOptions()) const {
-        return searchPositionIK(std::vector<geometry_msgs::msg::Pose>{ik_pose},
+        return searchPositionIK(std::vector<geometry_msgs::Pose>{ik_pose},
                                 ik_seed_state,
                                 timeout,
                                 std::vector<double>(),
@@ -320,16 +320,16 @@ class PickIKPlugin : public kinematics::KinematicsBase {
                                 options);
     }
 
-    virtual bool searchPositionIK(geometry_msgs::msg::Pose const& ik_pose,
+    virtual bool searchPositionIK(geometry_msgs::Pose const& ik_pose,
                                   std::vector<double> const& ik_seed_state,
                                   double timeout,
                                   std::vector<double> const& consistency_limits,
                                   std::vector<double>& solution,
                                   IKCallbackFn const& solution_callback,
-                                  moveit_msgs::msg::MoveItErrorCodes& error_code,
+                                  moveit_msgs::MoveItErrorCodes& error_code,
                                   kinematics::KinematicsQueryOptions const& options =
                                       kinematics::KinematicsQueryOptions()) const {
-        return searchPositionIK(std::vector<geometry_msgs::msg::Pose>{ik_pose},
+        return searchPositionIK(std::vector<geometry_msgs::Pose>{ik_pose},
                                 ik_seed_state,
                                 timeout,
                                 consistency_limits,
@@ -340,13 +340,13 @@ class PickIKPlugin : public kinematics::KinematicsBase {
     }
 
     virtual bool searchPositionIK(
-        std::vector<geometry_msgs::msg::Pose> const& ik_poses,
+        std::vector<geometry_msgs::Pose> const& ik_poses,
         std::vector<double> const& ik_seed_state,
         double timeout,
         std::vector<double> const& consistency_limits,
         std::vector<double>& solution,
         IKCallbackFn const& solution_callback,
-        moveit_msgs::msg::MoveItErrorCodes& error_code,
+        moveit_msgs::MoveItErrorCodes& error_code,
         kinematics::KinematicsQueryOptions const& options = kinematics::KinematicsQueryOptions(),
         moveit::core::RobotState const* context_state = NULL) const {
         return searchPositionIK(ik_poses,

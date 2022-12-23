@@ -43,7 +43,7 @@ auto get_minimal_displacement_factors(std::vector<size_t> const& active_variable
 auto get_variables(moveit::core::RobotState const& robot_state) -> std::vector<double>;
 
 auto transform_poses_to_frames(moveit::core::RobotState const& robot_state,
-                               std::vector<geometry_msgs::msg::Pose> const& poses,
+                               std::vector<geometry_msgs::Pose> const& poses,
                                std::string const& base_frame_name)
     -> std::vector<Eigen::Isometry3d>;
 

@@ -25,14 +25,14 @@ auto make_rr_model_for_ik() {
     auto builder = moveit::core::RobotModelBuilder("rr", "base");
 
     // Define transforms and joint axes
-    geometry_msgs::msg::Pose origin;
+    geometry_msgs::Pose origin;
     origin.orientation.w = 1.0;
 
-    geometry_msgs::msg::Pose tform_x1;
+    geometry_msgs::Pose tform_x1;
     tform_x1.position.x = 1.0;
     tform_x1.orientation.w = 1.0;
 
-    geometry_msgs::msg::Pose tform_x2;
+    geometry_msgs::Pose tform_x2;
     tform_x2.position.x = 2.0;
     tform_x2.orientation.w = 1.0;
 
