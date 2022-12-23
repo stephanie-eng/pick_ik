@@ -13,9 +13,10 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(expected)
 
-if(CMAKE_CXX_COMPILER_ID MATCHES "(GNU|Clang)")
-    add_compile_options(-Werror -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wsign-conversion -Wold-style-cast)
-endif()
+# TODO(seng): Re-enable warnings
+# if(CMAKE_CXX_COMPILER_ID MATCHES "(GNU|Clang)")
+#     add_compile_options(-Werror -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wsign-conversion -Wold-style-cast)
+# endif()
 
 find_package(catkin REQUIRED
 COMPONENTS
