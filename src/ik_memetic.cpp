@@ -11,6 +11,7 @@
 #include <fmt/core.h>
 #include <limits>
 #include <optional>
+#include <thread>
 #include <vector>
 
 namespace pick_ik {
