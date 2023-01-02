@@ -20,8 +20,7 @@ char const* LOGNAME = "pick_ik";
 }
 
 class PickIKPlugin : public kinematics::KinematicsBase {
-    ros::NodeHandle& nh_;
-    // std::shared_ptr<ParamListener> parameter_listener_;
+    ros::NodeHandle nh_;
     moveit::core::JointModelGroup const* jmg_;
 
     std::vector<std::string> joint_names_;
@@ -37,9 +36,6 @@ class PickIKPlugin : public kinematics::KinematicsBase {
                             std::vector<std::string> const& tip_frames,
                             double search_discretization) {
         nh_ = nh;
-        // parameter_listener_ = std::make_shared<ParamListener>(
-        //     node,
-        //     std::string("robot_description_kinematics.").append(group_name));
 
         // Initialize internal state of base class KinematicsBase
         // Creates these internal state variables:

@@ -20,12 +20,9 @@ FetchContent_MakeAvailable(expected)
 
 find_package(catkin REQUIRED
 COMPONENTS
-  # fmt
   moveit_core
   pluginlib
-  # range-v3
   roscpp
-  # rsl
   tf2_eigen
   tf2_geometry_msgs
   tf2_kdl
@@ -36,12 +33,9 @@ catkin_package(
   INCLUDE_DIRS include
   LIBRARIES ${PROJECT_NAME}
   CATKIN_DEPENDS
-    # fmt
     moveit_core
     pluginlib
-    # range-v3
     roscpp
-    # rsl
     tf2_eigen
     tf2_geometry_msgs
     tf2_kdl
@@ -67,11 +61,6 @@ target_include_directories(pick_ik_plugin PUBLIC
   )
 target_link_libraries(pick_ik_plugin ${catkin_LIBRARIES} expected)
 
-# pluginlib_export_plugin_description_file(
-#   moveit_core
-#   pick_ik_kinematics_description.xml
-# )
-
 if(BUILD_TESTING)
   add_subdirectory(tests)
 endif()
@@ -82,7 +71,7 @@ install(
 )
 
 install(
-  TARGETS pick_ik_plugin # pick_ik_parameters
+  TARGETS pick_ik_plugin
   EXPORT export_pick_ik
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
