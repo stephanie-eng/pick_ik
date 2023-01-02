@@ -6,6 +6,7 @@
 #include <chrono>
 #include <cmath>
 #include <fmt/core.h>
+#include <numeric>
 #include <optional>
 #include <vector>
 

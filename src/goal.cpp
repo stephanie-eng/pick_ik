@@ -9,6 +9,7 @@
 #include <moveit/robot_model/joint_model_group.h>
 #include <moveit/robot_model/robot_model.h>
 #include <moveit/robot_state/robot_state.h>
+#include <numeric>
 #include <optional>
 #include <vector>
 
@@ -126,7 +127,7 @@ auto make_minimal_displacement_cost_fn(Robot robot, std::vector<double> initial_
 }
 
 auto make_ik_cost_fn(geometry_msgs::Pose pose,
-                     kinematics::KinematicsBase::IKCostFn cost_fn,
+                     IKCostFn cost_fn,
                      std::shared_ptr<moveit::core::RobotModel const> robot_model,
                      moveit::core::JointModelGroup const* jmg,
                      std::vector<double> initial_guess) -> CostFn {

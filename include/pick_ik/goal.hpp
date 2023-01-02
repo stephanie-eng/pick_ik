@@ -31,6 +31,11 @@ auto make_pose_cost_functions(std::vector<Eigen::Isometry3d> goal_frames, double
 // Goal Function type
 using CostFn = std::function<double(std::vector<double> const& active_positions)>;
 
+/** @brief Signature for a cost function used to evaluate IK solutions. */
+using IKCostFn = std::function<double(geometry_msgs::Pose const&,
+                                      moveit::core::RobotState const&,
+                                      moveit::core::JointModelGroup const*,
+                                      std::vector<double> const&)>;
 struct Goal {
     CostFn eval;
     double weight;
@@ -43,7 +48,7 @@ auto make_avoid_joint_limits_cost_fn(Robot robot) -> CostFn;
 auto make_minimal_displacement_cost_fn(Robot robot, std::vector<double> initial_guess) -> CostFn;
 
 auto make_ik_cost_fn(geometry_msgs::Pose pose,
-                     kinematics::KinematicsBase::IKCostFn cost_fn,
+                     IKCostFn cost_fn,
                      std::shared_ptr<moveit::core::RobotModel const> robot_model,
                      moveit::core::JointModelGroup const* jmg,
                      std::vector<double> initial_guess) -> CostFn;

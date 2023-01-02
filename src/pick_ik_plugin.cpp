@@ -4,7 +4,7 @@
 #include <pick_ik/ik_memetic.hpp>
 #include <pick_ik/robot.hpp>
 
-#include <pick_ik_parameters.hpp>
+// #include <pick_ik_parameters.hpp>
 #include <pluginlib/class_list_macros.hpp>
 
 #include <moveit/kinematics_base/kinematics_base.h>
@@ -16,12 +16,12 @@
 
 namespace pick_ik {
 namespace {
-auto const LOGNAME = "pick_ik";
+char const* LOGNAME = "pick_ik";
 }
 
 class PickIKPlugin : public kinematics::KinematicsBase {
-    ros::NodeHandle& node_;
-    std::shared_ptr<ParamListener> parameter_listener_;
+    ros::NodeHandle& nh_;
+    // std::shared_ptr<ParamListener> parameter_listener_;
     moveit::core::JointModelGroup const* jmg_;
 
     std::vector<std::string> joint_names_;
@@ -30,16 +30,16 @@ class PickIKPlugin : public kinematics::KinematicsBase {
     Robot robot_;
 
    public:
-    virtual bool initialize(ros::NodeHandle const& node,
+    virtual bool initialize(ros::NodeHandle const& nh,
                             moveit::core::RobotModel const& robot_model,
                             std::string const& group_name,
                             std::string const& base_frame,
                             std::vector<std::string> const& tip_frames,
                             double search_discretization) {
-        node_ = node;
-        parameter_listener_ = std::make_shared<ParamListener>(
-            node,
-            std::string("robot_description_kinematics.").append(group_name));
+        nh_ = nh;
+        // parameter_listener_ = std::make_shared<ParamListener>(
+        //     node,
+        //     std::string("robot_description_kinematics.").append(group_name));
 
         // Initialize internal state of base class KinematicsBase
         // Creates these internal state variables:
@@ -103,7 +103,19 @@ class PickIKPlugin : public kinematics::KinematicsBase {
         (void)context_state;  // not used
 
         // Read current ROS parameters
-        auto params = parameter_listener_->get_params();
+        double param_rotation_scale, param_orientation_threshold, param_position_threshold,
+            param_center_joints_weight, avoid_joint_limits_weight, minimal_displacement_weight,
+            param_avoid_joint_limits_weight, param_minimal_displacement_weight,
+            param_cost_threshold;
+        std::string param_mode;
+        nh_.getParam("rotation_scale", param_rotation_scale);
+        nh_.getParam("orientation_threshold", param_orientation_threshold);
+        nh_.getParam("position_threshold", param_position_threshold);
+        nh_.getParam("center_joints_weight", param_center_joints_weight);
+        nh_.getParam("avoid_joint_limits_weight", param_avoid_joint_limits_weight);
+        nh_.getParam("minimal_displacement_weight", param_minimal_displacement_weight);
+        nh_.getParam("cost_threshold", param_cost_threshold);
+        nh_.getParam("mode", param_mode);
 
         auto const goal_frames = [&]() {
             auto robot_state = moveit::core::RobotState(robot_model_);
@@ -114,33 +126,33 @@ class PickIKPlugin : public kinematics::KinematicsBase {
         }();
 
         // Test functions to determine if we are at our goal frame
-        auto const test_rotation = (params.rotation_scale > 0);
+        auto const test_rotation = (param_rotation_scale > 0);
         std::optional<double> orientation_threshold = std::nullopt;
         if (test_rotation) {
-            orientation_threshold = params.orientation_threshold;
+            orientation_threshold = param_orientation_threshold;
         }
         auto const frame_tests =
-            make_frame_tests(goal_frames, params.position_threshold, orientation_threshold);
+            make_frame_tests(goal_frames, param_position_threshold, orientation_threshold);
 
         // Cost functions used for optimizing towards goal frames
         auto const pose_cost_functions =
-            make_pose_cost_functions(goal_frames, params.rotation_scale);
+            make_pose_cost_functions(goal_frames, param_rotation_scale);
 
         // forward kinematics function
         auto const fk_fn = make_fk_fn(robot_model_, jmg_, tip_link_indices_);
 
         // Create goals (weighted cost functions)
         auto goals = std::vector<Goal>{};
-        if (params.center_joints_weight > 0.0) {
-            goals.push_back(Goal{make_center_joints_cost_fn(robot_), params.center_joints_weight});
+        if (param_center_joints_weight > 0.0) {
+            goals.push_back(Goal{make_center_joints_cost_fn(robot_), param_center_joints_weight});
         }
-        if (params.avoid_joint_limits_weight > 0.0) {
+        if (param_avoid_joint_limits_weight > 0.0) {
             goals.push_back(
-                Goal{make_avoid_joint_limits_cost_fn(robot_), params.avoid_joint_limits_weight});
+                Goal{make_avoid_joint_limits_cost_fn(robot_), param_avoid_joint_limits_weight});
         }
-        if (params.minimal_displacement_weight > 0.0) {
+        if (param_minimal_displacement_weight > 0.0) {
             goals.push_back(Goal{make_minimal_displacement_cost_fn(robot_, ik_seed_state),
-                                 params.minimal_displacement_weight});
+                                 param_minimal_displacement_weight});
         }
         if (cost_function) {
             for (auto const& pose : ik_poses) {
@@ -152,27 +164,44 @@ class PickIKPlugin : public kinematics::KinematicsBase {
 
         // test if this is a valid solution
         auto const solution_fn =
-            make_is_solution_test_fn(frame_tests, goals, params.cost_threshold, fk_fn);
+            make_is_solution_test_fn(frame_tests, goals, param_cost_threshold, fk_fn);
 
         // single function used by gradient descent to calculate cost of solution
         auto const cost_fn = make_cost_fn(pose_cost_functions, goals, fk_fn);
 
         // Search for a solution using either the local or global solver.
         std::optional<std::vector<double>> maybe_solution;
-        if (params.mode == "global") {
+        if (param_mode == "global") {
+            // Read ROS parameters related to global solver
+            double param_memetic_population_size, param_memetic_elite_size,
+                param_memetic_wipeout_fitness_tol, param_memetic_num_threads,
+                param_memetic_stop_on_first_solution, param_memetic_max_generations,
+                param_gd_step_size, param_gd_min_cost_delta, param_memetic_gd_max_iters,
+                param_memetic_gd_max_time;
+            nh_.getParam("memetic_population_size", param_memetic_population_size);
+            nh_.getParam("memetic_elite_size", param_memetic_elite_size);
+            nh_.getParam("memetic_wipeout_fitness_tol", param_memetic_wipeout_fitness_tol);
+            nh_.getParam("memetic_num_threads", param_memetic_num_threads);
+            nh_.getParam("memetic_stop_on_first_solution", param_memetic_stop_on_first_solution);
+            nh_.getParam("memetic_max_generations", param_memetic_max_generations);
+            nh_.getParam("gd_step_size", param_gd_step_size);
+            nh_.getParam("gd_min_cost_delta", param_gd_min_cost_delta);
+            nh_.getParam("memetic_gd_max_iters", param_memetic_gd_max_iters);
+            nh_.getParam("memetic_gd_max_time", param_memetic_gd_max_time);
+
             MemeticIkParams ik_params;
-            ik_params.population_size = static_cast<size_t>(params.memetic_population_size);
-            ik_params.elite_size = static_cast<size_t>(params.memetic_elite_size);
-            ik_params.wipeout_fitness_tol = params.memetic_wipeout_fitness_tol;
-            ik_params.num_threads = static_cast<size_t>(params.memetic_num_threads);
-            ik_params.stop_on_first_soln = params.memetic_stop_on_first_solution;
-            ik_params.max_generations = static_cast<int>(params.memetic_max_generations);
+            ik_params.population_size = static_cast<size_t>(param_memetic_population_size);
+            ik_params.elite_size = static_cast<size_t>(param_memetic_elite_size);
+            ik_params.wipeout_fitness_tol = param_memetic_wipeout_fitness_tol;
+            ik_params.num_threads = static_cast<size_t>(param_memetic_num_threads);
+            ik_params.stop_on_first_soln = param_memetic_stop_on_first_solution;
+            ik_params.max_generations = static_cast<int>(param_memetic_max_generations);
             ik_params.max_time = timeout;
 
-            ik_params.gd_params.step_size = params.gd_step_size;
-            ik_params.gd_params.min_cost_delta = params.gd_min_cost_delta;
-            ik_params.gd_params.max_iterations = static_cast<int>(params.memetic_gd_max_iters);
-            ik_params.gd_params.max_time = params.memetic_gd_max_time;
+            ik_params.gd_params.step_size = param_gd_step_size;
+            ik_params.gd_params.min_cost_delta = param_gd_min_cost_delta;
+            ik_params.gd_params.max_iterations = static_cast<int>(param_memetic_gd_max_iters);
+            ik_params.gd_params.max_time = param_memetic_gd_max_time;
 
             maybe_solution = ik_memetic(ik_seed_state,
                                         robot_,
@@ -181,12 +210,18 @@ class PickIKPlugin : public kinematics::KinematicsBase {
                                         ik_params,
                                         options.return_approximate_solution,
                                         false /* No debug print */);
-        } else if (params.mode == "local") {
+        } else if (param_mode == "local") {
+            // Read ROS parameters related to local solver
+            double param_gd_step_size, param_gd_min_cost_delta, param_gd_max_iters;
+            nh_.getParam("gd_step_size", param_gd_step_size);
+            nh_.getParam("gd_min_cost_delta", param_gd_min_cost_delta);
+            nh_.getParam("gd_max_iters", param_gd_max_iters);
+
             GradientIkParams gd_params;
-            gd_params.step_size = params.gd_step_size;
-            gd_params.min_cost_delta = params.gd_min_cost_delta;
+            gd_params.step_size = param_gd_step_size;
+            gd_params.min_cost_delta = param_gd_min_cost_delta;
             gd_params.max_time = timeout;
-            gd_params.max_iterations = static_cast<int>(params.gd_max_iters);
+            gd_params.max_iterations = static_cast<int>(param_gd_max_iters);
 
             maybe_solution = ik_gradient(ik_seed_state,
                                          robot_,
@@ -195,7 +230,7 @@ class PickIKPlugin : public kinematics::KinematicsBase {
                                          gd_params,
                                          options.return_approximate_solution);
         } else {
-            ROS_ERROR(LOGNAME, "Invalid solver mode: %s", params.mode.c_str());
+            ROS_ERROR(LOGNAME, "Invalid solver mode: %s", param_mode.c_str());
             return false;
         }
 
@@ -217,14 +252,21 @@ class PickIKPlugin : public kinematics::KinematicsBase {
         // If the approximate solution is too far from the goal frame, fall back to the initial
         // state.
         if (options.return_approximate_solution) {
+            // Read ROS parameters related to local solver
+            double param_approximate_solution_position_threshold,
+                param_approximate_solution_orientation_threshold;
+            nh_.getParam("approximate_solution_position_threshold",
+                         param_approximate_solution_position_threshold);
+            nh_.getParam("approximate_solution_orientation_threshold",
+                         param_approximate_solution_orientation_threshold);
             std::optional<double> approximate_solution_orientation_threshold = std::nullopt;
             if (test_rotation) {
                 approximate_solution_orientation_threshold =
-                    params.approximate_solution_orientation_threshold;
+                    param_approximate_solution_orientation_threshold;
             }
             auto const approx_frame_tests =
                 make_frame_tests(goal_frames,
-                                 params.approximate_solution_position_threshold,
+                                 param_approximate_solution_position_threshold,
                                  approximate_solution_orientation_threshold);
             auto const tip_frames = fk_fn(solution);
             bool approx_solution_valid = true;
