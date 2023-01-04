@@ -178,7 +178,7 @@ class PickIKPlugin : public kinematics::KinematicsBase {
             ROS_INFO_STREAM("Param cost_threshold was less than minimum 0.0. Using default value: "
                             << params.cost_threshold);
         }
-        if (params.mode != "local" || params.mode != "global") {
+        if (params.mode != "local" && params.mode != "global") {
             params.mode = "global";
             ROS_INFO_STREAM(
                 "Param mode was not \"local\" or \"global\". Using default value: " << params.mode);
