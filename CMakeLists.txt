@@ -45,6 +45,12 @@ include_directories(SYSTEM include
   ${catkin_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIRS} ${tl_expected_SOURCE_DIR}/include/tl
 )
 
+add_library(rsl
+    src/rsl/random.cpp
+)
+add_library(rsl::rsl ALIAS rsl)
+target_link_libraries(rsl ${Boost_LIBRARIES})
+
 add_library(pick_ik_plugin SHARED
   src/fk_moveit.cpp
   src/forward_kinematics.cpp
@@ -59,7 +65,7 @@ target_include_directories(pick_ik_plugin PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>
   )
-target_link_libraries(pick_ik_plugin ${catkin_LIBRARIES} expected)
+target_link_libraries(pick_ik_plugin ${catkin_LIBRARIES} expected rsl)
 
 if(BUILD_TESTING)
   add_subdirectory(tests)

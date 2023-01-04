@@ -29,14 +29,11 @@ class PickIKPlugin : public kinematics::KinematicsBase {
     Robot robot_;
 
    public:
-    virtual bool initialize(ros::NodeHandle const& nh,
-                            moveit::core::RobotModel const& robot_model,
+    virtual bool initialize(moveit::core::RobotModel const& robot_model,
                             std::string const& group_name,
                             std::string const& base_frame,
                             std::vector<std::string> const& tip_frames,
                             double search_discretization) {
-        nh_ = nh;
-
         // Initialize internal state of base class KinematicsBase
         // Creates these internal state variables:
         // robot_model_ <- shared_ptr to RobotModel
