@@ -26,6 +26,7 @@ class PickIKPlugin : public kinematics::KinematicsBase {
     std::vector<std::string> joint_names_;
     std::vector<std::string> link_names_;
     std::vector<size_t> tip_link_indices_;
+    std::string ns_;
     Robot robot_;
 
    public:
@@ -79,6 +80,7 @@ class PickIKPlugin : public kinematics::KinematicsBase {
                 .value();
         robot_ = Robot::from(robot_model_, jmg_, tip_link_indices_);
 
+        ns_ = "/robot_description_kinematics/" + group_name + "/";
         return true;
     }
 
@@ -97,42 +99,43 @@ class PickIKPlugin : public kinematics::KinematicsBase {
 
         // Read current ROS parameters
         PickIKParameters params;
-        if (!nh_.getParam("rotation_scale", params.rotation_scale)) {
+        if (!nh_.getParam(ns_ + "rotation_scale", params.rotation_scale)) {
             params.rotation_scale = 0.5;
             ROS_INFO_STREAM(
                 "Param rotation_scale was not set. Using default value: " << params.rotation_scale);
         }
-        if (!nh_.getParam("position_threshold", params.position_threshold)) {
+        if (!nh_.getParam(ns_ + "position_threshold", params.position_threshold)) {
             params.position_threshold = 0.001;
             ROS_INFO_STREAM("Param position_threshold was not set. Using default value: "
                             << params.position_threshold);
         }
-        if (!nh_.getParam("center_joints_weight", params.center_joints_weight)) {
+        if (!nh_.getParam(ns_ + "center_joints_weight", params.center_joints_weight)) {
             params.center_joints_weight = 0.0;
             ROS_INFO_STREAM("Param center_joints_weight was not set. Using default value: "
                             << params.center_joints_weight);
         }
-        if (!nh_.getParam("avoid_joint_limits_weight", params.avoid_joint_limits_weight)) {
+        if (!nh_.getParam(ns_ + "avoid_joint_limits_weight", params.avoid_joint_limits_weight)) {
             params.avoid_joint_limits_weight = 0.0;
             ROS_INFO_STREAM("Param avoid_joint_limits_weight was not set. Using default value: "
                             << params.avoid_joint_limits_weight);
         }
-        if (!nh_.getParam("orientation_threshold", params.orientation_threshold)) {
+        if (!nh_.getParam(ns_ + "orientation_threshold", params.orientation_threshold)) {
             params.orientation_threshold = 0.001;
             ROS_INFO_STREAM("Param orientation_threshold was not set. Using default value: "
                             << params.orientation_threshold);
         }
-        if (!nh_.getParam("minimal_displacement_weight", params.minimal_displacement_weight)) {
+        if (!nh_.getParam(ns_ + "minimal_displacement_weight",
+                          params.minimal_displacement_weight)) {
             params.minimal_displacement_weight = 0.0;
             ROS_INFO_STREAM("Param minimal_displacement_weight was not set. Using default value: "
                             << params.minimal_displacement_weight);
         }
-        if (!nh_.getParam("cost_threshold", params.cost_threshold)) {
+        if (!nh_.getParam(ns_ + "cost_threshold", params.cost_threshold)) {
             params.cost_threshold = 0.001;
             ROS_INFO_STREAM(
                 "Param cost_threshold was not set. Using default value: " << params.cost_threshold);
         }
-        if (!nh_.getParam("mode", params.mode)) {
+        if (!nh_.getParam(ns_ + "mode", params.mode)) {
             params.mode = "global";
             ROS_INFO_STREAM("Param mode was not set. Using default value: " << params.mode);
         }
@@ -241,55 +244,56 @@ class PickIKPlugin : public kinematics::KinematicsBase {
         if (params.mode == "global") {
             // Read ROS parameters related to global solver
 
-            if (!nh_.getParam("memetic_population_size", params.memetic_population_size)) {
+            if (!nh_.getParam(ns_ + "memetic_population_size", params.memetic_population_size)) {
                 params.memetic_population_size = 16;
                 ROS_INFO_STREAM("Param memetic_population_size was not set. Using default value: "
                                 << params.memetic_population_size);
             }
-            if (!nh_.getParam("memetic_elite_size", params.memetic_elite_size)) {
+            if (!nh_.getParam(ns_ + "memetic_elite_size", params.memetic_elite_size)) {
                 params.memetic_elite_size = 4;
                 ROS_INFO_STREAM("Param memetic_elite_size was not set. Using default value: "
                                 << params.memetic_elite_size);
             }
-            if (!nh_.getParam("memetic_wipeout_fitness_tol", params.memetic_wipeout_fitness_tol)) {
+            if (!nh_.getParam(ns_ + "memetic_wipeout_fitness_tol",
+                              params.memetic_wipeout_fitness_tol)) {
                 params.memetic_wipeout_fitness_tol = 0.00001;
                 ROS_INFO_STREAM(
                     "Param memetic_wipeout_fitness_tol was not set. Using default value: "
                     << params.memetic_wipeout_fitness_tol);
             }
-            if (!nh_.getParam("memetic_num_threads", params.memetic_num_threads)) {
+            if (!nh_.getParam(ns_ + "memetic_num_threads", params.memetic_num_threads)) {
                 params.memetic_num_threads = 1;
                 ROS_INFO_STREAM("Param memetic_num_threads was not set. Using default value: "
                                 << params.memetic_num_threads);
             }
-            if (!nh_.getParam("memetic_stop_on_first_solution",
+            if (!nh_.getParam(ns_ + "memetic_stop_on_first_solution",
                               params.memetic_stop_on_first_solution)) {
                 params.memetic_stop_on_first_solution = true;
                 ROS_INFO_STREAM(
                     "Param memetic_stop_on_first_solution was not set. Using default value: "
                     << params.memetic_stop_on_first_solution);
             }
-            if (!nh_.getParam("memetic_max_generations", params.memetic_max_generations)) {
+            if (!nh_.getParam(ns_ + "memetic_max_generations", params.memetic_max_generations)) {
                 params.memetic_max_generations = 100;
                 ROS_INFO_STREAM("Param memetic_max_generations was not set. Using default value: "
                                 << params.memetic_max_generations);
             }
-            if (!nh_.getParam("gd_step_size", params.gd_step_size)) {
+            if (!nh_.getParam(ns_ + "gd_step_size", params.gd_step_size)) {
                 params.gd_step_size = 0.0001;
                 ROS_INFO_STREAM(
                     "Param gd_step_size was not set. Using default value: " << params.gd_step_size);
             }
-            if (!nh_.getParam("gd_min_cost_delta", params.gd_min_cost_delta)) {
+            if (!nh_.getParam(ns_ + "gd_min_cost_delta", params.gd_min_cost_delta)) {
                 params.gd_min_cost_delta = 1.0e-12;
                 ROS_INFO_STREAM("Param gd_min_cost_delta was not set. Using default value: "
                                 << params.gd_min_cost_delta);
             }
-            if (!nh_.getParam("memetic_gd_max_iters", params.memetic_gd_max_iters)) {
+            if (!nh_.getParam(ns_ + "memetic_gd_max_iters", params.memetic_gd_max_iters)) {
                 params.memetic_gd_max_iters = 100;
                 ROS_INFO_STREAM("Param memetic_gd_max_iters was not set. Using default value: "
                                 << params.memetic_gd_max_iters);
             }
-            if (!nh_.getParam("memetic_gd_max_time", params.memetic_gd_max_time)) {
+            if (!nh_.getParam(ns_ + "memetic_gd_max_time", params.memetic_gd_max_time)) {
                 params.memetic_gd_max_time = 0.005;
                 ROS_INFO_STREAM("Param memetic_gd_max_time was not set. Using default value: "
                                 << params.memetic_gd_max_time);
@@ -375,17 +379,17 @@ class PickIKPlugin : public kinematics::KinematicsBase {
                                         false /* No debug print */);
         } else if (params.mode == "local") {
             // Read ROS parameters related to local solver
-            if (!nh_.getParam("gd_step_size", params.gd_step_size)) {
+            if (!nh_.getParam(ns_ + "gd_step_size", params.gd_step_size)) {
                 params.memetic_gd_max_time = 0.005;
                 ROS_INFO_STREAM("Param memetic_gd_max_time was not set. Using default value: "
                                 << params.memetic_gd_max_time);
             }
-            if (!nh_.getParam("gd_min_cost_delta", params.gd_min_cost_delta)) {
+            if (!nh_.getParam(ns_ + "gd_min_cost_delta", params.gd_min_cost_delta)) {
                 params.gd_min_cost_delta = 1.0e-12;
                 ROS_INFO_STREAM("Param gd_min_cost_delta was not set. Using default value: "
                                 << params.gd_min_cost_delta);
             }
-            if (!nh_.getParam("gd_max_iters", params.gd_max_iters)) {
+            if (!nh_.getParam(ns_ + "gd_max_iters", params.gd_max_iters)) {
                 params.gd_max_iters = 100;
                 ROS_INFO_STREAM(
                     "Param gd_max_iters was not set. Using default value: " << params.gd_max_iters);
@@ -445,7 +449,7 @@ class PickIKPlugin : public kinematics::KinematicsBase {
         // state.
         if (options.return_approximate_solution) {
             // Read ROS parameters related to approximate solutions
-            if (!nh_.getParam("approximate_solution_position_threshold",
+            if (!nh_.getParam(ns_ + "approximate_solution_position_threshold",
                               params.approximate_solution_position_threshold)) {
                 params.approximate_solution_position_threshold = 0.05;
                 ROS_INFO_STREAM(
@@ -453,7 +457,7 @@ class PickIKPlugin : public kinematics::KinematicsBase {
                     "value: "
                     << params.approximate_solution_position_threshold);
             }
-            if (!nh_.getParam("approximate_solution_orientation_threshold",
+            if (!nh_.getParam(ns_ + "approximate_solution_orientation_threshold",
                               params.approximate_solution_orientation_threshold)) {
                 params.approximate_solution_orientation_threshold = 0.05;
                 ROS_INFO_STREAM(
