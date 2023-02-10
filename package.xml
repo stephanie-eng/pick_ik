@@ -15,7 +15,6 @@
   <depend>pluginlib</depend>
   <depend>range-v3</depend>
   <depend>roscpp</depend>
-  <depend>rsl</depend>
   <depend>tf2_eigen</depend>
   <depend>tf2_geometry_msgs</depend>
   <depend>tf2_kdl</depend>
